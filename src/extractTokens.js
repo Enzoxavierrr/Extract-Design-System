@@ -15,6 +15,51 @@ function normalizeColorString(v) {
     return s;
 }
 
+function isColorValue(str) {
+    if (!str) return false;
+    const s = str.toLowerCase().trim();
+    return s.startsWith('rgb(') || 
+           s.startsWith('rgba(') || 
+           s.startsWith('#') || 
+           s.includes('hsl(') || 
+           s.includes('hsla(') ||
+           s === 'currentcolor';
+}
+
+function isGradientValue(str) {
+    if (!str) return false;
+    return str.trim().startsWith('url(') || 
+           str.trim().startsWith('linear-gradient') ||
+           str.trim().startsWith('radial-gradient');
+}
+
+function isShadowValue(str) {
+    if (!str) return false;
+    const s = str.trim();
+    
+    // Verificar padrões típicos de shadow
+    // Box shadow: rgba/rgb + offset-x + offset-y + blur + spread
+    // Text shadow: rgba/rgb + offset-x + offset-y + blur
+    const hasColor = s.includes('rgba') || s.includes('rgb');
+    const hasPx = s.includes('px');
+    
+    if (hasColor && hasPx) {
+        // Verificar se tem padrão de shadow (números seguidos de px)
+        const pxCount = (s.match(/\d+px/g) || []).length;
+        // Shadow precisa ter pelo menos offset-x e offset-y (2 valores px)
+        return pxCount >= 2;
+    }
+    
+    return false;
+}
+
+function categorizeColor(value) {
+    if (isGradientValue(value)) return 'gradient';
+    if (isShadowValue(value)) return 'shadow';
+    if (isColorValue(value)) return 'color';
+    return 'other';
+}
+
 function addCount(map, key, n = 1) {
     if (!key) return;
     map.set(key, (map.get(key) || 0) + n);
@@ -25,6 +70,97 @@ function topNFromCountMap(map, n) {
         .sort((a, b) => b[1] - a[1])
         .slice(0, n)
         .map(([value, count]) => ({ value, count }));
+}
+
+function inferSemanticColorNames(colors) {
+    if (colors.length === 0) return {};
+    
+    const semantic = {};
+    const sorted = [...colors].sort((a, b) => b.count - a.count);
+    
+    // Cor mais frequente = primary
+    if (sorted[0] && isColorValue(sorted[0].value)) {
+        semantic.primary = sorted[0].value;
+    }
+    
+    // Segunda mais frequente = secondary (se for diferente da primary)
+    if (sorted[1] && isColorValue(sorted[1].value) && sorted[1].value !== semantic.primary) {
+        semantic.secondary = sorted[1].value;
+    }
+    
+    // Função auxiliar para detectar cores claras (background)
+    const isLightColor = (colorStr) => {
+        const s = colorStr.toLowerCase();
+        // RGB branco ou próximo
+        const rgbMatch = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            // Se a média dos valores RGB for > 200, é uma cor clara
+            return (r + g + b) / 3 > 200;
+        }
+        // RGBA com alpha
+        const rgbaMatch = s.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+        if (rgbaMatch) {
+            const r = parseInt(rgbaMatch[1]);
+            const g = parseInt(rgbaMatch[2]);
+            const b = parseInt(rgbaMatch[3]);
+            return (r + g + b) / 3 > 200;
+        }
+        // Hex branco ou próximo
+        if (s.match(/#([0-9a-f]{3}|[0-9a-f]{6})/)) {
+            return s.includes('#fff') || s.includes('#ff') || s.includes('#fe');
+        }
+        return false;
+    };
+    
+    // Função auxiliar para detectar cores escuras (text)
+    const isDarkColor = (colorStr) => {
+        const s = colorStr.toLowerCase();
+        // RGB preto ou próximo
+        const rgbMatch = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            // Se a média dos valores RGB for < 50, é uma cor escura
+            return (r + g + b) / 3 < 50;
+        }
+        // RGBA com alpha
+        const rgbaMatch = s.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+        if (rgbaMatch) {
+            const r = parseInt(rgbaMatch[1]);
+            const g = parseInt(rgbaMatch[2]);
+            const b = parseInt(rgbaMatch[3]);
+            return (r + g + b) / 3 < 50;
+        }
+        // Hex preto ou próximo
+        if (s.match(/#([0-9a-f]{3}|[0-9a-f]{6})/)) {
+            return s.includes('#000') || s.includes('#00') || s.includes('#01');
+        }
+        return false;
+    };
+    
+    // Procurar por cores claras para background
+    for (const c of sorted) {
+        if (!isColorValue(c.value)) continue;
+        if (!semantic.background && isLightColor(c.value)) {
+            semantic.background = c.value;
+            break;
+        }
+    }
+    
+    // Procurar por cores escuras para text
+    for (const c of sorted) {
+        if (!isColorValue(c.value)) continue;
+        if (!semantic.text && isDarkColor(c.value)) {
+            semantic.text = c.value;
+            break;
+        }
+    }
+    
+    return semantic;
 }
 
 async function extractTokensFromUrl({ url, maxElements = 2000, enableInteractions = true, fast = false }) {
@@ -275,9 +411,14 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
         const motionEvents = await page.evaluate(() => Array.isArray(window.__motionEvents) ? window.__motionEvents : []);
 
         const colorCounts = new Map();
+        const gradientCounts = new Map();
+        const shadowCounts = new Map();
         const typographyCounts = new Map();
         const transitionCounts = new Map();
         const animationCounts = new Map();
+        
+        // Map para manter formato original das cores (normalized -> original)
+        const colorOriginalMap = new Map();
 
         const rootColorVars = {};
         const rootOtherVars = {};
@@ -291,13 +432,40 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
             }
         }
 
+        // Separar cores, gradientes e sombras
         for (const sample of extraction.samples.colors || []) {
             const { colors, shadows } = sample;
+            
+            // Processar cores
             for (const v of Object.values(colors || {})) {
-                addCount(colorCounts, normalizeColorString(v));
+                const normalized = normalizeColorString(v);
+                if (!normalized) continue;
+                
+                const category = categorizeColor(v);
+                if (category === 'color') {
+                    // Guardar o primeiro formato original encontrado para cada valor normalizado
+                    if (!colorOriginalMap.has(normalized)) {
+                        colorOriginalMap.set(normalized, v.trim());
+                    }
+                    addCount(colorCounts, normalized);
+                } else if (category === 'gradient') {
+                    addCount(gradientCounts, v.trim());
+                }
             }
-            if (shadows && typeof shadows.boxShadow === 'string') addCount(colorCounts, normalizeColorString(shadows.boxShadow));
-            if (shadows && typeof shadows.textShadow === 'string') addCount(colorCounts, normalizeColorString(shadows.textShadow));
+            
+            // Processar sombras separadamente
+            if (shadows && typeof shadows.boxShadow === 'string' && shadows.boxShadow !== 'none') {
+                const shadowValue = shadows.boxShadow.trim();
+                if (shadowValue && isShadowValue(shadowValue)) {
+                    addCount(shadowCounts, shadowValue);
+                }
+            }
+            if (shadows && typeof shadows.textShadow === 'string' && shadows.textShadow !== 'none') {
+                const shadowValue = shadows.textShadow.trim();
+                if (shadowValue && isShadowValue(shadowValue)) {
+                    addCount(shadowCounts, shadowValue);
+                }
+            }
         }
 
         for (const t of extraction.samples.typography || []) {
@@ -419,21 +587,44 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
             };
         });
 
+        // Filtrar e categorizar cores, usando formato original
         const colorsTop = topNFromCountMap(colorCounts, 60)
-            .filter(({ value }) => value && value !== 'transparent' && value !== 'initial' && value !== 'inherit' && value !== 'unset')
+            .filter(({ value }) => value && 
+                    value !== 'transparent' && 
+                    value !== 'initial' && 
+                    value !== 'inherit' && 
+                    value !== 'unset' &&
+                    value !== 'none' &&
+                    isColorValue(value))
+            .map(({ value, count }) => ({ 
+                value: colorOriginalMap.get(value) || value, // Usar formato original
+                count 
+            }));
+
+        const gradientsTop = topNFromCountMap(gradientCounts, 20)
             .map(({ value, count }) => ({ value, count }));
+
+        const shadowsTop = topNFromCountMap(shadowCounts, 20)
+            .map(({ value, count }) => ({ value, count }));
+
+        // Inferir nomes semânticos
+        const semanticColors = inferSemanticColorNames(colorsTop);
 
         return {
             meta: {
                 url,
                 extractedAt: new Date().toISOString(),
                 maxElements,
-                interactionsEnabled: Boolean(enableInteractions)
+                interactionsEnabled: Boolean(enableInteractions),
+                description: `Design tokens extraídos de ${url}`
             },
             tokens: {
                 color: {
                     rootVariables: rootColorVars,
-                    sampled: colorsTop
+                    semantic: semanticColors,
+                    solid: colorsTop,
+                    gradients: gradientsTop,
+                    shadows: shadowsTop
                 },
                 typography: {
                     sampled: typographyTop
