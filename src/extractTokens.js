@@ -18,38 +18,38 @@ function normalizeColorString(v) {
 function isColorValue(str) {
     if (!str) return false;
     const s = str.toLowerCase().trim();
-    return s.startsWith('rgb(') || 
-           s.startsWith('rgba(') || 
-           s.startsWith('#') || 
-           s.includes('hsl(') || 
-           s.includes('hsla(') ||
-           s === 'currentcolor';
+    return s.startsWith('rgb(') ||
+        s.startsWith('rgba(') ||
+        s.startsWith('#') ||
+        s.includes('hsl(') ||
+        s.includes('hsla(') ||
+        s === 'currentcolor';
 }
 
 function isGradientValue(str) {
     if (!str) return false;
-    return str.trim().startsWith('url(') || 
-           str.trim().startsWith('linear-gradient') ||
-           str.trim().startsWith('radial-gradient');
+    return str.trim().startsWith('url(') ||
+        str.trim().startsWith('linear-gradient') ||
+        str.trim().startsWith('radial-gradient');
 }
 
 function isShadowValue(str) {
     if (!str) return false;
     const s = str.trim();
-    
+
     // Verificar padrões típicos de shadow
     // Box shadow: rgba/rgb + offset-x + offset-y + blur + spread
     // Text shadow: rgba/rgb + offset-x + offset-y + blur
     const hasColor = s.includes('rgba') || s.includes('rgb');
     const hasPx = s.includes('px');
-    
+
     if (hasColor && hasPx) {
         // Verificar se tem padrão de shadow (números seguidos de px)
         const pxCount = (s.match(/\d+px/g) || []).length;
         // Shadow precisa ter pelo menos offset-x e offset-y (2 valores px)
         return pxCount >= 2;
     }
-    
+
     return false;
 }
 
@@ -72,95 +72,333 @@ function topNFromCountMap(map, n) {
         .map(([value, count]) => ({ value, count }));
 }
 
+// Função para extrair componentes RGB de uma cor
+function parseRgbComponents(colorStr) {
+    const s = colorStr.toLowerCase().trim();
+
+    // RGB
+    const rgbMatch = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (rgbMatch) {
+        return {
+            r: parseInt(rgbMatch[1]),
+            g: parseInt(rgbMatch[2]),
+            b: parseInt(rgbMatch[3]),
+            a: 1
+        };
+    }
+
+    // RGBA
+    const rgbaMatch = s.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+    if (rgbaMatch) {
+        return {
+            r: parseInt(rgbaMatch[1]),
+            g: parseInt(rgbaMatch[2]),
+            b: parseInt(rgbaMatch[3]),
+            a: parseFloat(rgbaMatch[4])
+        };
+    }
+
+    // Hex 6 digits
+    const hex6Match = s.match(/#([0-9a-f]{6})/);
+    if (hex6Match) {
+        const hex = hex6Match[1];
+        return {
+            r: parseInt(hex.substr(0, 2), 16),
+            g: parseInt(hex.substr(2, 2), 16),
+            b: parseInt(hex.substr(4, 2), 16),
+            a: 1
+        };
+    }
+
+    // Hex 3 digits
+    const hex3Match = s.match(/#([0-9a-f]{3})/);
+    if (hex3Match) {
+        const hex = hex3Match[1];
+        return {
+            r: parseInt(hex[0] + hex[0], 16),
+            g: parseInt(hex[1] + hex[1], 16),
+            b: parseInt(hex[2] + hex[2], 16),
+            a: 1
+        };
+    }
+
+    return null;
+}
+
+// Função para converter RGB para HSL
+function rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+            case g: h = ((b - r) / d + 2) / 6; break;
+            case b: h = ((r - g) / d + 4) / 6; break;
+        }
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+// Função para calcular luminância relativa (WCAG)
+function getRelativeLuminance(r, g, b) {
+    const sRGB = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
+}
+
 function inferSemanticColorNames(colors) {
     if (colors.length === 0) return {};
-    
+
     const semantic = {};
     const sorted = [...colors].sort((a, b) => b.count - a.count);
-    
-    // Cor mais frequente = primary
-    if (sorted[0] && isColorValue(sorted[0].value)) {
-        semantic.primary = sorted[0].value;
+
+    // Analisar todas as cores com seus componentes
+    const analyzedColors = sorted
+        .filter(c => isColorValue(c.value))
+        .map(c => {
+            const rgb = parseRgbComponents(c.value);
+            if (!rgb) return null;
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            const luminance = getRelativeLuminance(rgb.r, rgb.g, rgb.b);
+            return { ...c, rgb, hsl, luminance };
+        })
+        .filter(Boolean);
+
+    if (analyzedColors.length === 0) return {};
+
+    // Primary: cor mais frequente com saturação razoável (não cinza)
+    const primaryCandidate = analyzedColors.find(c => c.hsl.s > 15 || c.hsl.l < 20 || c.hsl.l > 80);
+    if (primaryCandidate) {
+        semantic.primary = primaryCandidate.value;
+    } else if (analyzedColors[0]) {
+        semantic.primary = analyzedColors[0].value;
     }
-    
-    // Segunda mais frequente = secondary (se for diferente da primary)
-    if (sorted[1] && isColorValue(sorted[1].value) && sorted[1].value !== semantic.primary) {
-        semantic.secondary = sorted[1].value;
+
+    // Secondary: segunda cor mais frequente, diferente da primary
+    const secondaryCandidate = analyzedColors.find(c =>
+        c.value !== semantic.primary && (c.hsl.s > 10 || c.hsl.l < 30 || c.hsl.l > 70)
+    );
+    if (secondaryCandidate) {
+        semantic.secondary = secondaryCandidate.value;
     }
-    
-    // Função auxiliar para detectar cores claras (background)
-    const isLightColor = (colorStr) => {
-        const s = colorStr.toLowerCase();
-        // RGB branco ou próximo
-        const rgbMatch = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-        if (rgbMatch) {
-            const r = parseInt(rgbMatch[1]);
-            const g = parseInt(rgbMatch[2]);
-            const b = parseInt(rgbMatch[3]);
-            // Se a média dos valores RGB for > 200, é uma cor clara
-            return (r + g + b) / 3 > 200;
-        }
-        // RGBA com alpha
-        const rgbaMatch = s.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
-        if (rgbaMatch) {
-            const r = parseInt(rgbaMatch[1]);
-            const g = parseInt(rgbaMatch[2]);
-            const b = parseInt(rgbaMatch[3]);
-            return (r + g + b) / 3 > 200;
-        }
-        // Hex branco ou próximo
-        if (s.match(/#([0-9a-f]{3}|[0-9a-f]{6})/)) {
-            return s.includes('#fff') || s.includes('#ff') || s.includes('#fe');
-        }
-        return false;
-    };
-    
-    // Função auxiliar para detectar cores escuras (text)
-    const isDarkColor = (colorStr) => {
-        const s = colorStr.toLowerCase();
-        // RGB preto ou próximo
-        const rgbMatch = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-        if (rgbMatch) {
-            const r = parseInt(rgbMatch[1]);
-            const g = parseInt(rgbMatch[2]);
-            const b = parseInt(rgbMatch[3]);
-            // Se a média dos valores RGB for < 50, é uma cor escura
-            return (r + g + b) / 3 < 50;
-        }
-        // RGBA com alpha
-        const rgbaMatch = s.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
-        if (rgbaMatch) {
-            const r = parseInt(rgbaMatch[1]);
-            const g = parseInt(rgbaMatch[2]);
-            const b = parseInt(rgbaMatch[3]);
-            return (r + g + b) / 3 < 50;
-        }
-        // Hex preto ou próximo
-        if (s.match(/#([0-9a-f]{3}|[0-9a-f]{6})/)) {
-            return s.includes('#000') || s.includes('#00') || s.includes('#01');
-        }
-        return false;
-    };
-    
-    // Procurar por cores claras para background
-    for (const c of sorted) {
-        if (!isColorValue(c.value)) continue;
-        if (!semantic.background && isLightColor(c.value)) {
-            semantic.background = c.value;
-            break;
-        }
+
+    // Accent: cor com alta saturação (vibrante)
+    const accentCandidate = analyzedColors.find(c =>
+        c.hsl.s > 50 && c.hsl.l > 25 && c.hsl.l < 75 &&
+        c.value !== semantic.primary && c.value !== semantic.secondary
+    );
+    if (accentCandidate) {
+        semantic.accent = accentCandidate.value;
     }
-    
-    // Procurar por cores escuras para text
-    for (const c of sorted) {
-        if (!isColorValue(c.value)) continue;
-        if (!semantic.text && isDarkColor(c.value)) {
-            semantic.text = c.value;
-            break;
-        }
+
+    // Background: cor muito clara (alta luminância)
+    const backgroundCandidate = analyzedColors.find(c => c.luminance > 0.85);
+    if (backgroundCandidate) {
+        semantic.background = backgroundCandidate.value;
     }
-    
+
+    // Text: cor muito escura (baixa luminância)
+    const textCandidate = analyzedColors.find(c => c.luminance < 0.15);
+    if (textCandidate) {
+        semantic.text = textCandidate.value;
+    }
+
+    // Border: cor cinza (baixa saturação, luminância média)
+    const borderCandidate = analyzedColors.find(c =>
+        c.hsl.s < 15 && c.hsl.l > 40 && c.hsl.l < 85 &&
+        c.value !== semantic.background
+    );
+    if (borderCandidate) {
+        semantic.border = borderCandidate.value;
+    }
+
+    // Cores de status baseadas em matiz (hue)
+    // Success: verde (hue ~120)
+    const successCandidate = analyzedColors.find(c =>
+        c.hsl.h >= 90 && c.hsl.h <= 150 && c.hsl.s > 30
+    );
+    if (successCandidate) {
+        semantic.success = successCandidate.value;
+    }
+
+    // Error: vermelho (hue ~0 ou ~360)
+    const errorCandidate = analyzedColors.find(c =>
+        (c.hsl.h >= 0 && c.hsl.h <= 20) || (c.hsl.h >= 340 && c.hsl.h <= 360) &&
+        c.hsl.s > 40
+    );
+    if (errorCandidate) {
+        semantic.error = errorCandidate.value;
+    }
+
+    // Warning: amarelo/laranja (hue ~30-60)
+    const warningCandidate = analyzedColors.find(c =>
+        c.hsl.h >= 25 && c.hsl.h <= 55 && c.hsl.s > 40
+    );
+    if (warningCandidate) {
+        semantic.warning = warningCandidate.value;
+    }
+
+    // Info: azul (hue ~200-240)
+    const infoCandidate = analyzedColors.find(c =>
+        c.hsl.h >= 190 && c.hsl.h <= 250 && c.hsl.s > 30 &&
+        c.value !== semantic.primary && c.value !== semantic.secondary
+    );
+    if (infoCandidate) {
+        semantic.info = infoCandidate.value;
+    }
+
     return semantic;
+}
+
+// Função para extrair valor numérico de uma string CSS (ex: "16px" -> 16)
+function parseNumericValue(value) {
+    if (!value) return null;
+    const match = String(value).match(/^([\d.]+)(px|rem|em|%)?$/);
+    if (match) {
+        return {
+            number: parseFloat(match[1]),
+            unit: match[2] || 'px',
+            original: value
+        };
+    }
+    return null;
+}
+
+// Função para criar escala de tamanhos de fonte
+function createFontSizeScale(typographySamples) {
+    // Extrair todos os font-sizes únicos
+    const fontSizes = new Map();
+
+    for (const sample of typographySamples) {
+        const parsed = parseNumericValue(sample.value?.fontSize);
+        if (parsed && parsed.unit === 'px') {
+            const key = parsed.number;
+            if (!fontSizes.has(key)) {
+                fontSizes.set(key, { value: sample.value.fontSize, count: sample.count });
+            } else {
+                fontSizes.get(key).count += sample.count;
+            }
+        }
+    }
+
+    // Ordenar por tamanho
+    const sorted = [...fontSizes.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .slice(0, 10); // Máximo 10 tamanhos na escala
+
+    if (sorted.length === 0) return {};
+
+    // Nomes de escala baseados em posição
+    const scaleNames = ['xs', 'sm', 'base', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl'];
+
+    // Se tivermos poucos tamanhos, centralizamos na escala
+    const scale = {};
+    const startIndex = Math.max(0, Math.floor((scaleNames.length - sorted.length) / 2));
+
+    sorted.forEach(([size, data], index) => {
+        const scaleName = scaleNames[startIndex + index] || `size-${index}`;
+        scale[scaleName] = data.value;
+    });
+
+    return scale;
+}
+
+// Função para criar escala de espaçamentos
+function createSpacingScale(spacingSamples) {
+    // Extrair todos os valores únicos
+    const spacings = new Map();
+
+    for (const sample of spacingSamples) {
+        const parsed = parseNumericValue(sample.value);
+        if (parsed && parsed.unit === 'px' && parsed.number > 0) {
+            const key = parsed.number;
+            if (!spacings.has(key)) {
+                spacings.set(key, { value: sample.value, count: sample.count });
+            } else {
+                spacings.get(key).count += sample.count;
+            }
+        }
+    }
+
+    // Ordenar por tamanho
+    const sorted = [...spacings.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .slice(0, 12); // Máximo 12 valores na escala
+
+    if (sorted.length === 0) return {};
+
+    // Detectar se parece uma escala baseada em 4 ou 8
+    const values = sorted.map(([size]) => size);
+    const isBase8 = values.every(v => v % 8 === 0 || v % 4 === 0);
+
+    const scale = {};
+
+    if (isBase8 && values.length >= 3) {
+        // Usar nomes numéricos (0, 1, 2, 3...) para escala consistente
+        sorted.forEach(([size, data], index) => {
+            scale[String(index)] = data.value;
+        });
+    } else {
+        // Usar nomes semânticos
+        const scaleNames = ['0', 'px', '0.5', '1', '1.5', '2', '2.5', '3', '4', '5', '6', '8', '10', '12', '16', '20'];
+        sorted.forEach(([size, data], index) => {
+            scale[scaleNames[index] || String(index)] = data.value;
+        });
+    }
+
+    return scale;
+}
+
+// Função para criar escala de border-radius
+function createBorderRadiusScale(borderRadiusSamples) {
+    const radii = new Map();
+
+    for (const sample of borderRadiusSamples) {
+        const parsed = parseNumericValue(sample.value);
+        if (parsed && parsed.number > 0) {
+            const key = parsed.number;
+            if (!radii.has(key)) {
+                radii.set(key, { value: sample.value, count: sample.count });
+            } else {
+                radii.get(key).count += sample.count;
+            }
+        }
+    }
+
+    // Ordenar por tamanho
+    const sorted = [...radii.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .slice(0, 8);
+
+    if (sorted.length === 0) return {};
+
+    const scaleNames = ['none', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'full'];
+    const scale = {};
+
+    // Mapear valores para nomes de escala
+    sorted.forEach(([size, data], index) => {
+        // Valores muito grandes provavelmente são "full" (50%, 9999px, etc.)
+        if (size >= 100 || String(data.value).includes('%')) {
+            scale['full'] = data.value;
+        } else {
+            scale[scaleNames[index + 1] || `radius-${index}`] = data.value;
+        }
+    });
+
+    return scale;
 }
 
 async function extractTokensFromUrl({ url, maxElements = 2000, enableInteractions = true, fast = false }) {
@@ -309,6 +547,8 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
             const colorSamples = [];
             const typographySamples = [];
             const motionSamples = [];
+            const spacingSamples = [];
+            const sizingSamples = [];
 
             const pick = (obj, keys) => {
                 const out = {};
@@ -367,6 +607,39 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
                         'animationPlayState'
                     ])
                 );
+
+                // Spacing tokens
+                spacingSamples.push(
+                    pick(cs, [
+                        'marginTop',
+                        'marginRight',
+                        'marginBottom',
+                        'marginLeft',
+                        'paddingTop',
+                        'paddingRight',
+                        'paddingBottom',
+                        'paddingLeft',
+                        'gap',
+                        'rowGap',
+                        'columnGap'
+                    ])
+                );
+
+                // Sizing tokens
+                sizingSamples.push(
+                    pick(cs, [
+                        'width',
+                        'height',
+                        'minWidth',
+                        'minHeight',
+                        'maxWidth',
+                        'maxHeight',
+                        'borderTopLeftRadius',
+                        'borderTopRightRadius',
+                        'borderBottomRightRadius',
+                        'borderBottomLeftRadius'
+                    ])
+                );
             }
 
             return {
@@ -375,7 +648,9 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
                 samples: {
                     colors: colorSamples,
                     typography: typographySamples,
-                    motion: motionSamples
+                    motion: motionSamples,
+                    spacing: spacingSamples,
+                    sizing: sizingSamples
                 }
             };
         }, { maxElements });
@@ -416,7 +691,9 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
         const typographyCounts = new Map();
         const transitionCounts = new Map();
         const animationCounts = new Map();
-        
+        const spacingCounts = new Map();
+        const borderRadiusCounts = new Map();
+
         // Map para manter formato original das cores (normalized -> original)
         const colorOriginalMap = new Map();
 
@@ -435,12 +712,12 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
         // Separar cores, gradientes e sombras
         for (const sample of extraction.samples.colors || []) {
             const { colors, shadows } = sample;
-            
+
             // Processar cores
             for (const v of Object.values(colors || {})) {
                 const normalized = normalizeColorString(v);
                 if (!normalized) continue;
-                
+
                 const category = categorizeColor(v);
                 if (category === 'color') {
                     // Guardar o primeiro formato original encontrado para cada valor normalizado
@@ -452,7 +729,7 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
                     addCount(gradientCounts, v.trim());
                 }
             }
-            
+
             // Processar sombras separadamente
             if (shadows && typeof shadows.boxShadow === 'string' && shadows.boxShadow !== 'none') {
                 const shadowValue = shadows.boxShadow.trim();
@@ -501,6 +778,37 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
                 normalizeWhitespace(m.animationPlayState)
             ].join('|');
             if (animationKey !== '|||||||' && !animationKey.startsWith('none|')) addCount(animationCounts, animationKey);
+        }
+
+        // Processar spacing tokens
+        for (const s of extraction.samples.spacing || []) {
+            // Extrair valores únicos de spacing (ignorando 0px e auto)
+            const spacingValues = [
+                s.marginTop, s.marginRight, s.marginBottom, s.marginLeft,
+                s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft,
+                s.gap, s.rowGap, s.columnGap
+            ];
+            for (const v of spacingValues) {
+                const normalized = normalizeWhitespace(v);
+                if (normalized && normalized !== '0px' && normalized !== 'auto' && normalized !== 'normal') {
+                    addCount(spacingCounts, normalized);
+                }
+            }
+        }
+
+        // Processar sizing e border-radius tokens
+        for (const sz of extraction.samples.sizing || []) {
+            // Border radius values
+            const radiusValues = [
+                sz.borderTopLeftRadius, sz.borderTopRightRadius,
+                sz.borderBottomRightRadius, sz.borderBottomLeftRadius
+            ];
+            for (const v of radiusValues) {
+                const normalized = normalizeWhitespace(v);
+                if (normalized && normalized !== '0px') {
+                    addCount(borderRadiusCounts, normalized);
+                }
+            }
         }
 
         for (const evt of motionEvents || []) {
@@ -589,16 +897,16 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
 
         // Filtrar e categorizar cores, usando formato original
         const colorsTop = topNFromCountMap(colorCounts, 60)
-            .filter(({ value }) => value && 
-                    value !== 'transparent' && 
-                    value !== 'initial' && 
-                    value !== 'inherit' && 
-                    value !== 'unset' &&
-                    value !== 'none' &&
-                    isColorValue(value))
-            .map(({ value, count }) => ({ 
+            .filter(({ value }) => value &&
+                value !== 'transparent' &&
+                value !== 'initial' &&
+                value !== 'inherit' &&
+                value !== 'unset' &&
+                value !== 'none' &&
+                isColorValue(value))
+            .map(({ value, count }) => ({
                 value: colorOriginalMap.get(value) || value, // Usar formato original
-                count 
+                count
             }));
 
         const gradientsTop = topNFromCountMap(gradientCounts, 20)
@@ -609,6 +917,19 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
 
         // Inferir nomes semânticos
         const semanticColors = inferSemanticColorNames(colorsTop);
+
+        // Processar spacing tokens - ordenar por frequência
+        const spacingTop = topNFromCountMap(spacingCounts, 30)
+            .map(({ value, count }) => ({ value, count }));
+
+        // Processar border-radius tokens - ordenar por frequência
+        const borderRadiusTop = topNFromCountMap(borderRadiusCounts, 20)
+            .map(({ value, count }) => ({ value, count }));
+
+        // Criar escalas organizadas
+        const fontSizeScale = createFontSizeScale(typographyTop);
+        const spacingScale = createSpacingScale(spacingTop);
+        const borderRadiusScale = createBorderRadiusScale(borderRadiusTop);
 
         return {
             meta: {
@@ -627,7 +948,16 @@ async function extractTokensFromUrl({ url, maxElements = 2000, enableInteraction
                     shadows: shadowsTop
                 },
                 typography: {
+                    scale: fontSizeScale,
                     sampled: typographyTop
+                },
+                spacing: {
+                    scale: spacingScale,
+                    sampled: spacingTop
+                },
+                borderRadius: {
+                    scale: borderRadiusScale,
+                    sampled: borderRadiusTop
                 },
                 motion: {
                     transitions: transitionsTop,

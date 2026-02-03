@@ -1,12 +1,13 @@
 # Agent Design System
 
-Agente automatizado para extração de tokens de design system de sites web. Este agente utiliza Playwright para navegar até uma URL, analisar estilos CSS computados e extrair tokens de design organizados em categorias: cores, tipografia e animações.
+Agente automatizado para extração de tokens de design system de sites web. Este agente utiliza Playwright para navegar até uma URL, analisar estilos CSS computados e extrair tokens de design organizados em categorias: cores, tipografia, espaçamentos, border-radius e animações.
 
 ## 📋 Índice
 
 - [Instalação](#instalação)
 - [Uso Básico](#uso-básico)
 - [Opções Disponíveis](#opções-disponíveis)
+- [Formatos de Output](#formatos-de-output)
 - [Estrutura do Output](#estrutura-do-output)
 - [Exemplos](#exemplos)
 - [Como Funciona](#como-funciona)
@@ -66,8 +67,8 @@ npm run extract -- --url https://www.example.com
 Caminho do arquivo de saída ou diretório. Se for um diretório, o arquivo será nomeado automaticamente.
 
 **Valores padrão:**
-- Se não especificado: `<hostname>-extract.json` no diretório atual
-- Se for um diretório: `<hostname>-extract.json` dentro do diretório especificado
+- Se não especificado: `<hostname>-extract.<ext>` no diretório atual
+- Se for um diretório: arquivos nomeados automaticamente dentro do diretório
 
 **Exemplos:**
 
@@ -79,13 +80,35 @@ npm run extract -- --url https://example.com --out ./tokens/design-tokens.json
 npm run extract -- --url https://example.com --out ./tokens/
 ```
 
+### `--format` ou `-f` (opcional)
+
+Formato de saída dos tokens. **Valor padrão:** `json`
+
+| Formato | Descrição |
+|---------|-----------|
+| `json` | Extração completa em JSON (padrão) |
+| `css` | CSS Custom Properties (variáveis :root) |
+| `tailwind` | Arquivo de configuração Tailwind CSS |
+| `all` | Gera todos os formatos acima |
+
+**Exemplos:**
+
+```bash
+# Gerar apenas CSS
+npm run extract -- --url https://example.com --format css
+
+# Gerar configuração Tailwind
+npm run extract -- --url https://example.com --format tailwind
+
+# Gerar todos os formatos
+npm run extract -- --url https://example.com --format all
+```
+
 ### `--max-elements` (opcional)
 
 Número máximo de elementos DOM a serem analisados para estilos computados.
 
 **Valor padrão:** `2000`
-
-**Exemplo:**
 
 ```bash
 npm run extract -- --url https://example.com --max-elements 5000
@@ -97,8 +120,6 @@ npm run extract -- --url https://example.com --max-elements 5000
 
 Desabilita as interações automáticas (hover, click, scroll) que são usadas para capturar tokens de animação e transição.
 
-**Exemplo:**
-
 ```bash
 npm run extract -- --url https://example.com --no-interactions
 ```
@@ -107,13 +128,11 @@ npm run extract -- --url https://example.com --no-interactions
 
 Modo rápido que otimiza a extração:
 
-- Limita elementos amostrados a 700 (mesmo que `--max-elements` seja maior)
+- Limita elementos amostrados a 700
 - Bloqueia recursos pesados (imagens, mídia, fontes)
 - Desabilita interações por padrão
-- Usa `domcontentloaded` em vez de `load` para carregamento mais rápido
+- Usa `domcontentloaded` em vez de `load`
 - Reduz timeouts e delays
-
-**Exemplo:**
 
 ```bash
 npm run extract -- --url https://example.com --fast
@@ -127,9 +146,95 @@ Exibe a ajuda com todas as opções disponíveis.
 npm run extract -- --help
 ```
 
-## 📊 Estrutura do Output
+## 📁 Formatos de Output
 
-O arquivo JSON gerado contém a seguinte estrutura:
+### JSON (padrão)
+
+Extração completa com todos os tokens organizados por categoria. Ideal para processamento programático.
+
+```bash
+npm run extract -- --url https://example.com --format json
+# Output: example.com-extract.json
+```
+
+### CSS Custom Properties
+
+Gera um arquivo CSS com variáveis `:root` prontas para uso:
+
+```bash
+npm run extract -- --url https://example.com --format css
+# Output: example.com-tokens.css
+```
+
+**Exemplo de output:**
+```css
+:root {
+  /* Semantic Colors */
+  --color-primary: rgb(24, 80, 225);
+  --color-secondary: rgb(0, 0, 0);
+  --color-background: rgb(250, 252, 252);
+  --color-text: rgb(0, 0, 0);
+  
+  /* Font Size Scale */
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  
+  /* Spacing Scale */
+  --spacing-0: 4px;
+  --spacing-1: 8px;
+  --spacing-2: 16px;
+  --spacing-3: 24px;
+  
+  /* Border Radius Scale */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+}
+```
+
+### Tailwind CSS Config
+
+Gera um arquivo de configuração Tailwind CSS com os tokens extraídos:
+
+```bash
+npm run extract -- --url https://example.com --format tailwind
+# Output: example.com-tailwind.config.js
+```
+
+**Exemplo de output:**
+```javascript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: "rgb(24, 80, 225)",
+        secondary: "rgb(0, 0, 0)",
+        background: "rgb(250, 252, 252)"
+      },
+      fontSize: {
+        sm: "14px",
+        base: "16px",
+        lg: "18px"
+      },
+      spacing: {
+        0: "4px",
+        1: "8px",
+        2: "16px"
+      },
+      borderRadius: {
+        sm: "4px",
+        md: "8px",
+        lg: "16px"
+      }
+    }
+  }
+};
+```
+
+## 📊 Estrutura do Output (JSON)
 
 ```json
 {
@@ -137,22 +242,45 @@ O arquivo JSON gerado contém a seguinte estrutura:
     "url": "https://www.example.com",
     "extractedAt": "2025-12-25T15:00:28.500Z",
     "maxElements": 2000,
-    "interactionsEnabled": true
+    "interactionsEnabled": true,
+    "description": "Design tokens extraídos de https://www.example.com"
   },
   "tokens": {
     "color": {
       "rootVariables": {
-        "--color-primary": "#0066cc",
-        "--color-secondary": "#333333"
+        "--color-primary": "#0066cc"
       },
-      "sampled": [
-        {
-          "value": "rgb(0, 102, 204)",
-          "count": 150
-        }
+      "semantic": {
+        "primary": "rgb(0, 102, 204)",
+        "secondary": "rgb(51, 51, 51)",
+        "accent": "rgb(255, 107, 107)",
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(0, 0, 0)",
+        "border": "rgb(200, 200, 200)",
+        "success": "rgb(40, 167, 69)",
+        "error": "rgb(220, 53, 69)",
+        "warning": "rgb(255, 193, 7)",
+        "info": "rgb(23, 162, 184)"
+      },
+      "solid": [
+        { "value": "rgb(0, 102, 204)", "count": 150 }
+      ],
+      "gradients": [
+        { "value": "linear-gradient(...)", "count": 5 }
+      ],
+      "shadows": [
+        { "value": "rgba(0, 0, 0, 0.1) 0px 4px 12px", "count": 20 }
       ]
     },
     "typography": {
+      "scale": {
+        "xs": "12px",
+        "sm": "14px",
+        "base": "16px",
+        "md": "18px",
+        "lg": "24px",
+        "xl": "32px"
+      },
       "sampled": [
         {
           "value": {
@@ -166,6 +294,29 @@ O arquivo JSON gerado contém a seguinte estrutura:
           },
           "count": 45
         }
+      ]
+    },
+    "spacing": {
+      "scale": {
+        "0": "4px",
+        "1": "8px",
+        "2": "16px",
+        "3": "24px",
+        "4": "32px"
+      },
+      "sampled": [
+        { "value": "16px", "count": 120 }
+      ]
+    },
+    "borderRadius": {
+      "scale": {
+        "sm": "4px",
+        "md": "8px",
+        "lg": "16px",
+        "full": "9999px"
+      },
+      "sampled": [
+        { "value": "8px", "count": 45 }
       ]
     },
     "motion": {
@@ -185,12 +336,7 @@ O arquivo JSON gerado contém a seguinte estrutura:
           "value": {
             "animationName": "fadeIn",
             "animationDuration": "0.5s",
-            "animationTimingFunction": "ease-in-out",
-            "animationDelay": "0s",
-            "animationIterationCount": "1",
-            "animationDirection": "normal",
-            "animationFillMode": "both",
-            "animationPlayState": "running"
+            "animationTimingFunction": "ease-in-out"
           },
           "count": 10
         }
@@ -199,23 +345,15 @@ O arquivo JSON gerado contém a seguinte estrutura:
         {
           "name": "fadeIn",
           "frames": [
-            {
-              "keyText": "0%",
-              "style": "opacity: 0;"
-            },
-            {
-              "keyText": "100%",
-              "style": "opacity: 1;"
-            }
+            { "keyText": "0%", "style": "opacity: 0;" },
+            { "keyText": "100%", "style": "opacity: 1;" }
           ]
         }
       ]
     }
   },
   "debug": {
-    "rootVariablesOther": {
-      "--spacing-unit": "8px"
-    },
+    "rootVariablesOther": { "--spacing-unit": "8px" },
     "motionEventsSample": []
   }
 }
@@ -230,20 +368,33 @@ O arquivo JSON gerado contém a seguinte estrutura:
 - `interactionsEnabled`: Se as interações estavam habilitadas
 
 #### `tokens.color`
-- `rootVariables`: Variáveis CSS customizadas relacionadas a cores encontradas em `:root`
-- `sampled`: Cores mais frequentes encontradas nos elementos, ordenadas por contagem
+- `rootVariables`: Variáveis CSS customizadas relacionadas a cores em `:root`
+- `semantic`: Cores inferidas automaticamente com nomes semânticos
+  - `primary`, `secondary`: Cores principais baseadas em frequência
+  - `accent`: Cor vibrante de destaque (alta saturação)
+  - `background`, `text`: Inferidas por luminância (WCAG)
+  - `border`: Cor neutra para bordas
+  - `success`, `error`, `warning`, `info`: Cores de status por matiz HSL
+- `solid`: Cores sólidas mais frequentes
+- `gradients`: Gradientes encontrados
+- `shadows`: Box-shadows e text-shadows
 
 #### `tokens.typography`
-- `sampled`: Combinações de propriedades tipográficas mais frequentes, ordenadas por contagem
+- `scale`: Escala de font-sizes organizada (xs, sm, base, md, lg, xl, etc.)
+- `sampled`: Combinações de propriedades tipográficas mais frequentes
+
+#### `tokens.spacing`
+- `scale`: Escala de espaçamentos organizada numericamente
+- `sampled`: Valores de margin/padding/gap mais frequentes
+
+#### `tokens.borderRadius`
+- `scale`: Escala de border-radius (sm, md, lg, full)
+- `sampled`: Valores mais frequentes
 
 #### `tokens.motion`
 - `transitions`: Transições CSS mais frequentes
 - `animations`: Animações CSS mais frequentes
-- `keyframes`: Definições de keyframes encontradas nos estilos
-
-#### `debug`
-- `rootVariablesOther`: Variáveis CSS customizadas não relacionadas a cores
-- `motionEventsSample`: Amostra de eventos de movimento capturados durante interações
+- `keyframes`: Definições de `@keyframes`
 
 ## 📝 Exemplos
 
@@ -253,66 +404,67 @@ O arquivo JSON gerado contém a seguinte estrutura:
 npm run extract -- --url https://www.example.com
 ```
 
-Gera: `example.com-extract.json`
-
-### Exemplo 2: Extração com Arquivo de Saída Customizado
+### Exemplo 2: Todos os Formatos
 
 ```bash
-npm run extract -- --url https://www.example.com --out ./design-tokens.json
+npm run extract -- --url https://www.example.com --format all
 ```
 
-### Exemplo 3: Extração Rápida (Modo Fast)
+Gera:
+- `example.com-extract.json`
+- `example.com-tokens.css`
+- `example.com-tailwind.config.js`
+
+### Exemplo 3: Apenas CSS para Projeto Existente
 
 ```bash
-npm run extract -- --url https://www.example.com --fast
+npm run extract -- --url https://www.example.com --format css --out ./src/styles/tokens.css
 ```
 
-### Exemplo 4: Extração com Mais Elementos
+### Exemplo 4: Extração Rápida com Tailwind
 
 ```bash
-npm run extract -- --url https://www.example.com --max-elements 5000
+npm run extract -- --url https://www.example.com --fast --format tailwind
 ```
 
-### Exemplo 5: Extração sem Interações
-
-```bash
-npm run extract -- --url https://www.example.com --no-interactions
-```
-
-### Exemplo 6: Extração Completa com Todas as Opções
+### Exemplo 5: Extração Completa
 
 ```bash
 npm run extract -- \
   --url https://www.example.com \
-  --out ./tokens/my-tokens.json \
+  --out ./tokens/ \
+  --format all \
   --max-elements 3000
 ```
 
 ## 🔍 Como Funciona
 
-1. **Navegação**: O agente usa Playwright para abrir a URL especificada em um navegador headless Chromium.
+1. **Navegação**: O agente usa Playwright para abrir a URL em um navegador headless Chromium.
 
 2. **Carregamento**: Aguarda o carregamento completo da página (ou `domcontentloaded` no modo fast).
 
 3. **Extração de Variáveis CSS**: Coleta todas as variáveis CSS customizadas (`--*`) definidas em `:root`.
 
 4. **Amostragem de Elementos**: Seleciona até `maxElements` elementos visíveis do DOM e extrai:
-   - **Cores**: `color`, `backgroundColor`, `borderColor`, `outlineColor`, `textDecorationColor`, `fill`, `stroke`, `boxShadow`, `textShadow`
-   - **Tipografia**: `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`, `lineHeight`, `letterSpacing`, `textTransform`
-   - **Movimento**: `transition*` e `animation*` properties
+   - **Cores**: `color`, `backgroundColor`, `borderColor`, `fill`, `stroke`, `boxShadow`, `textShadow`
+   - **Tipografia**: `fontFamily`, `fontSize`, `fontWeight`, `lineHeight`, `letterSpacing`
+   - **Espaçamento**: `margin*`, `padding*`, `gap`, `rowGap`, `columnGap`
+   - **Border-Radius**: `borderTopLeftRadius`, etc.
+   - **Movimento**: `transition*` e `animation*`
 
-5. **Interações (opcional)**: Se habilitado, interage com elementos clicáveis (até 25 elementos) e faz scroll para capturar animações e transições em tempo real.
+5. **Interações (opcional)**: Interage com elementos clicáveis e faz scroll para capturar estados dinâmicos.
 
-6. **Análise de Keyframes**: Extrai definições de `@keyframes` dos stylesheets CSS.
+6. **Análise de Keyframes**: Extrai definições de `@keyframes` dos stylesheets.
 
-7. **Agregação**: Conta a frequência de cada token e retorna os mais comuns (top 30 para tipografia e movimento, top 60 para cores).
+7. **Inferência Semântica**: Usa análise de cor (HSL, luminância WCAG) para inferir nomes semânticos automaticamente.
 
-8. **Geração do JSON**: Salva todos os tokens extraídos em um arquivo JSON formatado.
+8. **Criação de Escalas**: Agrupa valores em escalas coerentes (xs, sm, md, lg, xl).
+
+9. **Geração de Output**: Salva os tokens no formato escolhido (JSON, CSS, Tailwind ou todos).
 
 ## 🛠️ Dependências
 
 - **playwright**: Navegação e automação do navegador
-- **cheerio**: Parsing HTML (não usado diretamente, mas presente)
 - **postcss**: Processamento CSS
 - **postcss-safe-parser**: Parser seguro de CSS
 
@@ -326,4 +478,3 @@ npm run extract -- \
 ## 📄 Licença
 
 ISC
-

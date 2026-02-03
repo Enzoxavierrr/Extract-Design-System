@@ -1,12 +1,14 @@
 {
   "name": "agent-design-system",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Automated design token extractor from websites",
+  "main": "server.js",
   "bin": {
     "extract-tokens": "./bin/extract-tokens.js"
   },
   "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
     "extract": "node ./bin/extract-tokens.js",
     "postinstall": "playwright install",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,7 +18,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "cheerio": "^1.1.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "playwright": "^1.55.0",
     "postcss": "^8.5.6",
     "postcss-safe-parser": "^7.0.1"
