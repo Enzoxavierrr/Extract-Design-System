@@ -13,7 +13,7 @@ class DesignTokenExtractor {
         this.form = document.getElementById('extractForm');
         this.urlInput = document.getElementById('urlInput');
         this.extractBtn = document.getElementById('extractBtn');
-        this.fastMode = document.getElementById('fastMode');
+        this.fastMode = true; // Default to fast mode
         this.progressContainer = document.getElementById('progressContainer');
         this.progressFill = document.getElementById('progressFill');
         this.progressText = document.getElementById('progressText');
@@ -104,12 +104,38 @@ class DesignTokenExtractor {
                 },
                 body: JSON.stringify({
                     url: url,
-                    fast: this.fastMode.checked,
+                    fast: this.fastMode,
                     maxElements: 1000
                 })
             });
 
-            const result = await response.json();
+            // Check if response is ok
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Erro do servidor (${response.status})`;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.error || errorMessage;
+                } catch {
+                    if (errorText) errorMessage = errorText;
+                }
+                throw new Error(errorMessage);
+            }
+
+            // Check if response has content
+            const responseText = await response.text();
+            if (!responseText) {
+                throw new Error('Resposta vazia do servidor. Tente novamente.');
+            }
+
+            // Parse JSON
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON Parse Error:', parseError, 'Response:', responseText);
+                throw new Error('Resposta inválida do servidor. Tente novamente.');
+            }
 
             if (!result.success) {
                 throw new Error(result.error || 'Erro desconhecido');
@@ -367,5 +393,24 @@ class DesignTokenExtractor {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Hide loading screen after content loads
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+        // Wait a minimum amount of time to show the animation
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+        }, 4000); // 2 seconds minimum loading time
+    }
+
     new DesignTokenExtractor();
+});
+
+// Also hide loading screen when window fully loads (images, etc.)
+window.addEventListener('load', () => {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+        }, 1000);
+    }
 });

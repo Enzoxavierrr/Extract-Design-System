@@ -1,227 +1,264 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Design Token Extractor | Extract Design Systems from Any Website</title>
-    <meta name="description" content="Extract design tokens (colors, typography, spacing, animations) from any website automatically.">
+    <title>Design System Extractor | Extraia Design Systems de Qualquer Site</title>
+    <meta name="description"
+        content="Extraia automaticamente o design system de qualquer site. Cores, tipografia, espaçamentos e mais.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="robo.png">
 </head>
+
 <body>
-    <!-- Background Effects -->
-    <div class="bg-effects">
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
-        <div class="grid-overlay"></div>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader">
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="text"><span>Loading</span></div>
+            <div class="line"></div>
+        </div>
     </div>
 
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <div class="logo-text">
-                    <h1>Design Token Extractor</h1>
-                    <span class="tagline">Extract design systems automatically</span>
-                </div>
-            </div>
-        </header>
+    <!-- Main App Container -->
+    <div class="app-container">
 
         <!-- Main Content -->
-        <main class="main">
-            <!-- Input Section -->
-            <section class="input-section">
-                <div class="input-card glass-card">
-                    <div class="input-header">
-                        <h2>Extract Design Tokens</h2>
-                        <p>Enter a website URL to extract colors, typography, spacing, and animations</p>
-                    </div>
-                    
-                    <form id="extractForm" class="extract-form">
-                        <div class="input-group">
-                            <div class="input-icon">
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <main class="main-content">
+            <!-- Title Section -->
+            <div class="title-section">
+                <div class="title-wrapper">
+                    <h1 class="main-title">Design System <span class="title-orange">Extractor</span></h1>
+                </div>
+                <p class="main-description">
+                    Extraia automaticamente o design system de qualquer site. Insira a URL e receba um JSON completo com
+                    cores, tipografia, espaçamentos e mais.
+                </p>
+            </div>
+
+            <!-- Spline Container -->
+            <div class="spline-container" id="splineContainer">
+                <script type="module"
+                    src="https://unpkg.com/@splinetool/viewer@1.12.48/build/spline-viewer.js"></script>
+                <spline-viewer url="https://prod.spline.design/BOllgzVWqzRKlcNe/scene.splinecode"></spline-viewer>
+            </div>
+
+            <!-- Form Section -->
+            <div class="form-section">
+                <form id="extractForm" class="extract-form">
+                    <div class="form-group">
+                        <label for="urlInput" class="form-label">URL do Site</label>
+                        <div class="input-wrapper">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g data-name="Layer 2">
+                                    <g data-name="inbox">
+                                        <rect width="24" height="24" transform="rotate(180 12 12)" opacity="0"></rect>
+                                        <path
+                                            d="M20.79 11.34l-3.34-6.68A3 3 0 0 0 14.76 3H9.24a3 3 0 0 0-2.69 1.66l-3.34 6.68a2 2 0 0 0-.21.9V18a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-5.76a2 2 0 0 0-.21-.9zM8.34 5.55a1 1 0 0 1 .9-.55h5.52a1 1 0 0 1 .9.55L18.38 11H16a1 1 0 0 0-1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2a1 1 0 0 0-1-1H5.62z">
+                                        </path>
+                                    </g>
+                                </g>
+                            </svg>
+                            <input type="url" id="urlInput" name="url" class="input" placeholder="https://exemplo.com"
+                                required autocomplete="off" />
+                            <button type="submit" id="extractBtn" class="Subscribe-btn">
+                                Extrair
+                                <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                            </div>
-                            <input 
-                                type="url" 
-                                id="urlInput" 
-                                name="url" 
-                                placeholder="https://example.com"
-                                required
-                                autocomplete="off"
-                            >
-                            <button type="submit" class="btn-extract" id="extractBtn">
-                                <span class="btn-text">Extract</span>
-                                <span class="btn-loader">
-                                    <svg class="spinner" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round"/>
-                                    </svg>
-                                </span>
                             </button>
                         </div>
-                        
-                        <div class="options-row">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="fastMode" checked>
-                                <span class="checkbox-custom"></span>
-                                <span class="checkbox-text">Fast Mode</span>
-                            </label>
-                            <span class="option-hint">Recommended for faster extraction</span>
-                        </div>
-                    </form>
-                    
-                    <!-- Progress -->
-                    <div class="progress-container" id="progressContainer">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill"></div>
-                        </div>
-                        <div class="progress-text" id="progressText">Extracting tokens...</div>
+                        <span class="form-hint">Cole a URL completa do site que você deseja analisar</span>
                     </div>
-                </div>
-            </section>
+                </form>
+            </div>
 
-            <!-- Results Section -->
-            <section class="results-section" id="resultsSection">
-                <!-- Stats Cards -->
-                <div class="stats-grid" id="statsGrid">
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon colors-icon">
-                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="colorCount">0</span>
-                            <span class="stat-label">Colors</span>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon typography-icon">
-                            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="fontCount">0</span>
-                            <span class="stat-label">Font Styles</span>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon spacing-icon">
-                            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="spacingCount">0</span>
-                            <span class="stat-label">Spacing Values</span>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon motion-icon">
-                            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="animationCount">0</span>
-                            <span class="stat-label">Animations</span>
-                        </div>
-                    </div>
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
-
-                <!-- Color Preview -->
-                <div class="preview-section glass-card" id="colorPreview">
-                    <h3>Color Palette</h3>
-                    <div class="color-grid" id="colorGrid"></div>
-                </div>
-
-                <!-- Tabs -->
-                <div class="output-section glass-card">
-                    <div class="tabs-header">
-                        <button class="tab-btn active" data-tab="json">JSON</button>
-                        <button class="tab-btn" data-tab="css">CSS Variables</button>
-                        <button class="tab-btn" data-tab="tailwind">Tailwind Config</button>
-                    </div>
-                    
-                    <div class="tabs-content">
-                        <div class="tab-panel active" id="tab-json">
-                            <div class="code-header">
-                                <span class="code-lang">JSON</span>
-                                <button class="btn-copy" data-copy="json">
-                                    <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/></svg>
-                                    <span>Copy</span>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code id="jsonOutput"></code></pre>
-                        </div>
-                        
-                        <div class="tab-panel" id="tab-css">
-                            <div class="code-header">
-                                <span class="code-lang">CSS</span>
-                                <button class="btn-copy" data-copy="css">
-                                    <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/></svg>
-                                    <span>Copy</span>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code id="cssOutput"></code></pre>
-                        </div>
-                        
-                        <div class="tab-panel" id="tab-tailwind">
-                            <div class="code-header">
-                                <span class="code-lang">JavaScript</span>
-                                <button class="btn-copy" data-copy="tailwind">
-                                    <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/></svg>
-                                    <span>Copy</span>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code id="tailwindOutput"></code></pre>
-                        </div>
-                    </div>
-                    
-                    <!-- Download Buttons -->
-                    <div class="download-actions">
-                        <button class="btn-download" data-format="json">
-                            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Download JSON
-                        </button>
-                        <button class="btn-download" data-format="css">
-                            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Download CSS
-                        </button>
-                        <button class="btn-download" data-format="tailwind">
-                            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            Download Tailwind
-                        </button>
-                    </div>
-                </div>
-            </section>
+                <div class="progress-text" id="progressText">Extraindo tokens...</div>
+            </div>
 
             <!-- Error Message -->
-            <div class="error-message glass-card" id="errorMessage">
+            <div class="error-message" id="errorMessage">
                 <div class="error-icon">
-                    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                        <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
                 </div>
                 <div class="error-content">
-                    <h4>Extraction Failed</h4>
+                    <h4>Falha na Extração</h4>
                     <p id="errorText"></p>
                 </div>
-                <button class="btn-retry" id="retryBtn">Try Again</button>
+                <button class="btn-retry" id="retryBtn">Tentar Novamente</button>
             </div>
         </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Built with ❤️ using Playwright & Node.js</p>
-        </footer>
     </div>
+
+    <!-- Results Section (Hidden by default) -->
+    <section class="results-section" id="resultsSection">
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon colors-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                        <circle cx="12" cy="12" r="4" fill="currentColor" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="colorCount">0</span>
+                    <span class="stat-label">Cores</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon typography-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="fontCount">0</span>
+                    <span class="stat-label">Estilos de Fonte</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon spacing-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                        <path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="currentColor" stroke-width="1" opacity="0.5" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="spacingCount">0</span>
+                    <span class="stat-label">Espaçamentos</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon motion-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="animationCount">0</span>
+                    <span class="stat-label">Animações</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Preview -->
+        <div class="preview-section" id="colorPreview">
+            <h3>Paleta de Cores</h3>
+            <div class="color-grid" id="colorGrid"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="output-section">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="json">JSON</button>
+                <button class="tab-btn" data-tab="css">CSS Variables</button>
+                <button class="tab-btn" data-tab="tailwind">Tailwind Config</button>
+            </div>
+
+            <div class="tabs-content">
+                <div class="tab-panel active" id="tab-json">
+                    <div class="code-header">
+                        <span class="code-lang">JSON</span>
+                        <button class="btn-copy" data-copy="json">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
+                                    stroke-width="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor"
+                                    stroke-width="2" />
+                            </svg>
+                            <span>Copiar</span>
+                        </button>
+                    </div>
+                    <pre class="code-block"><code id="jsonOutput"></code></pre>
+                </div>
+
+                <div class="tab-panel" id="tab-css">
+                    <div class="code-header">
+                        <span class="code-lang">CSS</span>
+                        <button class="btn-copy" data-copy="css">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
+                                    stroke-width="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor"
+                                    stroke-width="2" />
+                            </svg>
+                            <span>Copiar</span>
+                        </button>
+                    </div>
+                    <pre class="code-block"><code id="cssOutput"></code></pre>
+                </div>
+
+                <div class="tab-panel" id="tab-tailwind">
+                    <div class="code-header">
+                        <span class="code-lang">JavaScript</span>
+                        <button class="btn-copy" data-copy="tailwind">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
+                                    stroke-width="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor"
+                                    stroke-width="2" />
+                            </svg>
+                            <span>Copiar</span>
+                        </button>
+                    </div>
+                    <pre class="code-block"><code id="tailwindOutput"></code></pre>
+                </div>
+            </div>
+
+            <!-- Download Buttons -->
+            <div class="download-actions">
+                <button class="btn-download" data-format="json">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Download JSON
+                </button>
+                <button class="btn-download" data-format="css">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Download CSS
+                </button>
+                <button class="btn-download" data-format="tailwind">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Download Tailwind
+                </button>
+            </div>
+        </div>
+    </section>
+
+
 
     <script src="app.js"></script>
 </body>
+
 </html>
