@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { extractTokensFromUrl } = require('../src/extractTokens');
+const { extractTokensFromUrl } = require('../src/core/extractTokens');
 
 function validateUrl(input) {
     if (!input) return null;

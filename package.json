@@ -2,13 +2,13 @@
   "name": "agent-design-system",
   "version": "1.0.0",
   "description": "Automated design token extractor from websites",
-  "main": "server.js",
+  "main": "src/server.js",
   "bin": {
     "extract-tokens": "./bin/extract-tokens.js"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
     "extract": "node ./bin/extract-tokens.js",
     "postinstall": "playwright install",
     "test": "echo \"Error: no test specified\" && exit 1"
