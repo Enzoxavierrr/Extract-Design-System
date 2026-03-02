@@ -7,7 +7,7 @@ function generateCssCustomProperties(result) {
     lines.push('');
     lines.push(':root {');
 
-    if (result.tokens.color.semantic) {
+    if (result.tokens.color.semantic && Object.keys(result.tokens.color.semantic).length > 0) {
         lines.push('  /* Semantic Colors */');
         for (const [name, value] of Object.entries(result.tokens.color.semantic)) {
             lines.push(`  --color-${name}: ${value};`);
@@ -84,7 +84,7 @@ function generateTailwindConfig(result) {
         }
     };
 
-    if (result.tokens.color.semantic) {
+    if (result.tokens.color.semantic && Object.keys(result.tokens.color.semantic).length > 0) {
         config.theme.extend.colors = {};
         for (const [name, value] of Object.entries(result.tokens.color.semantic)) {
             config.theme.extend.colors[name] = value;

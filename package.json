@@ -12,7 +12,7 @@
     "dev:live": "npx browser-sync start --server 'public' --files 'public/**/*' --no-open",
     "extract": "node ./bin/extract-tokens.js",
     "postinstall": "playwright install",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --verbose"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +25,7 @@
     "playwright": "^1.55.0"
   },
   "devDependencies": {
-    "browser-sync": "^3.0.4"
+    "browser-sync": "^3.0.4",
+    "jest": "^30.2.0"
   }
 }
