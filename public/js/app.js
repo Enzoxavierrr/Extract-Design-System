@@ -476,9 +476,6 @@ function populateDashboard(data) {
     // --- Spacing ---
     renderScale('spacing-tokens', tokens.spacing?.scale, 'spacing');
 
-    // --- Border Radius ---
-    renderScale('radius-tokens', tokens.borderRadius?.scale, 'radius');
-
     // --- Animations ---
     renderAnimations(tokens.motion?.animations, tokens.motion?.keyframes);
 
