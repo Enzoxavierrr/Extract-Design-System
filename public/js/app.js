@@ -90,19 +90,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ----------------------------------------
-    // 8. Hide Spline Watermark
+    // 8. Lazy Load Spline 3D
     // ----------------------------------------
-    const splineViewer = document.querySelector('spline-viewer');
-    if (splineViewer) {
-        const hideSplineLogo = () => {
-            if (splineViewer.shadowRoot) {
-                const style = document.createElement('style');
-                style.textContent = '#logo { display: none !important; }';
-                splineViewer.shadowRoot.appendChild(style);
-            }
-        };
-        hideSplineLogo();
-        splineViewer.addEventListener('load', hideSplineLogo);
+    const splinePlaceholder = document.getElementById('spline-placeholder');
+    if (splinePlaceholder) {
+        const splineObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    splineObserver.disconnect();
+
+                    // Load the Spline viewer script
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.src = 'https://unpkg.com/@splinetool/viewer@1.12.61/build/spline-viewer.js';
+                    document.head.appendChild(script);
+
+                    // Set the url attribute so the scene loads
+                    const viewer = document.getElementById('vortex-spline');
+                    if (viewer) {
+                        const sceneUrl = viewer.dataset.url;
+                        if (sceneUrl) viewer.setAttribute('url', sceneUrl);
+
+                        // Hide watermark once loaded
+                        const hideSplineLogo = () => {
+                            if (viewer.shadowRoot) {
+                                const style = document.createElement('style');
+                                style.textContent = '#logo { display: none !important; }';
+                                viewer.shadowRoot.appendChild(style);
+                            }
+                        };
+                        viewer.addEventListener('load', hideSplineLogo);
+                    }
+                }
+            });
+        }, { rootMargin: '200px' });
+        splineObserver.observe(splinePlaceholder);
     }
 
     // ----------------------------------------

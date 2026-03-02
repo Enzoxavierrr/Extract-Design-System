@@ -227,6 +227,12 @@ spline-viewer {
     height: 100%;
 }
 
+.spline-lazy {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
 /* --- ARQUITETURA SECTION --- */
 .arquitetura {
     padding: 140px 80px;
