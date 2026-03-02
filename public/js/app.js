@@ -150,15 +150,46 @@ document.addEventListener('DOMContentLoaded', () => {
                         const sceneUrl = viewer.dataset.url;
                         if (sceneUrl) viewer.setAttribute('url', sceneUrl);
 
-                        // Hide watermark once loaded
-                        const hideSplineLogo = () => {
-                            if (viewer.shadowRoot) {
+                        // Shadow DOM patches: watermark removal + quality boost
+                        const patchShadowDOM = () => {
+                            const sr = viewer.shadowRoot;
+                            if (!sr) return false;
+
+                            // 1. Hide "Built with Spline" watermark
+                            if (!sr.querySelector('#vortexe-hide-logo')) {
                                 const style = document.createElement('style');
-                                style.textContent = '#logo { display: none !important; }';
-                                viewer.shadowRoot.appendChild(style);
+                                style.id = 'vortexe-hide-logo';
+                                style.textContent = '#logo, .logo, [id*="logo"], a[href*="spline.design"] { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }';
+                                sr.appendChild(style);
                             }
+
+                            // 2. Force native DPR on canvas for maximum sharpness
+                            const canvas = sr.querySelector('canvas');
+                            if (canvas) {
+                                const dpr = window.devicePixelRatio || 1;
+                                const rect = canvas.getBoundingClientRect();
+                                const w = Math.round(rect.width * dpr);
+                                const h = Math.round(rect.height * dpr);
+                                if (canvas.width < w || canvas.height < h) {
+                                    canvas.width = w;
+                                    canvas.height = h;
+                                    canvas.style.width = rect.width + 'px';
+                                    canvas.style.height = rect.height + 'px';
+                                }
+                            }
+                            return true;
                         };
-                        viewer.addEventListener('load', hideSplineLogo);
+
+                        // Try immediately, on load, and poll as fallback
+                        patchShadowDOM();
+                        viewer.addEventListener('load', patchShadowDOM);
+
+                        // Retry when shadowRoot content changes
+                        const waitForShadow = setInterval(() => {
+                            if (patchShadowDOM()) clearInterval(waitForShadow);
+                        }, 500);
+                        // Stop polling after 10s
+                        setTimeout(() => clearInterval(waitForShadow), 10000);
                     }
                 }
             });
