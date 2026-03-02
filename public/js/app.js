@@ -289,6 +289,130 @@ function renderTypography(sampled, scale) {
 }
 
 /**
+ * Analyzes keyframes to infer animation type and description.
+ */
+function analyzeAnimation(keyframe) {
+    if (!keyframe || !keyframe.rules) return 'Animação customizada';
+    
+    const rules = keyframe.rules;
+    let hasOpacity = false;
+    let hasTransform = false;
+    let hasTranslate = false;
+    let hasScale = false;
+    let hasRotate = false;
+    let hasColor = false;
+    
+    // Analyze styles in keyframes
+    rules.forEach(rule => {
+        const style = rule.style?.toLowerCase() || '';
+        if (style.includes('opacity')) hasOpacity = true;
+        if (style.includes('transform')) hasTransform = true;
+        if (style.includes('translate')) hasTranslate = true;
+        if (style.includes('scale')) hasScale = true;
+        if (style.includes('rotate')) hasRotate = true;
+        if (style.includes('color') || style.includes('background')) hasColor = true;
+    });
+    
+    // Infer animation type
+    const types = [];
+    if (hasOpacity && !hasTransform) return 'Fade (Transição de opacidade)';
+    if (hasTranslate && hasOpacity) return 'Slide + Fade (Deslizamento com fade)';
+    if (hasTranslate) return 'Slide (Deslizamento)';
+    if (hasScale && hasOpacity) return 'Zoom + Fade (Escala com fade)';
+    if (hasScale) return 'Zoom (Transformação de escala)';
+    if (hasRotate) return 'Rotate (Rotação)';
+    if (hasColor) return 'Color Shift (Mudança de cor)';
+    if (hasTransform) return 'Transform (Transformação complexa)';
+    
+    return 'Animação customizada';
+}
+
+/**
+ * Renders animations list.
+ */
+function renderAnimations(animations, keyframes) {
+    const container = document.getElementById('animations-tokens');
+    if (!container) return;
+    
+    if (!animations || !animations.length) {
+        container.innerHTML = '<p class="token-empty">Nenhuma animação detectada.</p>';
+        return;
+    }
+    
+    container.innerHTML = animations.map((anim, i) => {
+        const keyframe = keyframes?.find(k => k.name === anim.value);
+        const description = keyframe ? analyzeAnimation(keyframe) : 'Animação externa';
+        
+        return `
+            <div class="token-item">
+                <div class="token-label">Animation ${i + 1}</div>
+                <div class="token-value">${escapeHtml(anim.value)}</div>
+                <div class="token-description">${description}</div>
+                <div class="token-detail">
+                    ${keyframe ? `${keyframe.rules?.length || 0} keyframes` : ''}
+                    <span style="float: right; color: var(--accent-violet);">×${anim.count} usos</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Renders fonts list.
+ */
+function renderFonts(sampled) {
+    const container = document.getElementById('fonts-tokens');
+    if (!container) return;
+    
+    if (!sampled || !sampled.length) {
+        container.innerHTML = '<p class="token-empty">Nenhuma fonte detectada.</p>';
+        return;
+    }
+    
+    // Agrupar por fontFamily
+    const fontMap = new Map();
+    sampled.forEach(item => {
+        if (item.value?.fontFamily) {
+            const family = item.value.fontFamily;
+            if (!fontMap.has(family)) {
+                fontMap.set(family, {
+                    family,
+                    sizes: new Set(),
+                    weights: new Set(),
+                    count: 0
+                });
+            }
+            const fontData = fontMap.get(family);
+            fontData.count += item.count || 1;
+            if (item.value.fontSize) fontData.sizes.add(item.value.fontSize);
+            if (item.value.fontWeight) fontData.weights.add(item.value.fontWeight);
+        }
+    });
+    
+    const fonts = Array.from(fontMap.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    
+    container.innerHTML = fonts.map((font, i) => {
+        const weights = Array.from(font.weights).sort((a, b) => parseInt(a) - parseInt(b));
+        return `
+            <div class="token-item">
+                <div class="token-label">Font Family ${i + 1}</div>
+                <div class="token-value" style="font-family: ${escapeHtml(font.family)}, sans-serif;">
+                    ${escapeHtml(font.family)}
+                </div>
+                <div class="token-description">
+                    ${font.sizes.size} tamanhos • Pesos: ${weights.map(w => escapeHtml(w)).join(', ')}
+                </div>
+                <div class="token-detail" style="font-family: ${escapeHtml(font.family)}, sans-serif;">
+                    The quick brown fox jumps over the lazy dog — 0123456789
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
  * Renders a scale (spacing or border-radius).
  */
 function renderScale(containerId, scale, type) {
@@ -354,6 +478,12 @@ function populateDashboard(data) {
 
     // --- Border Radius ---
     renderScale('radius-tokens', tokens.borderRadius?.scale, 'radius');
+
+    // --- Animations ---
+    renderAnimations(tokens.motion?.animations, tokens.motion?.keyframes);
+
+    // --- Fonts ---
+    renderFonts(tokens.typography?.sampled);
 
     // --- Code Outputs ---
     renderCodeOutputs(css, tailwind);
