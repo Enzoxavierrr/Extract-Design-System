@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { extract } = require('./controllers/extractController');
+const { analyzeDesignSystem } = require('./controllers/geminiController');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // API Endpoint para extração
 app.post('/api/extract', extract);
+
+// API Endpoint para análise Gemini (proxy seguro)
+app.post('/api/gemini', analyzeDesignSystem);
 
 // Health check
 app.get('/api/health', (req, res) => {

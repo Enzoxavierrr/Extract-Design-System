@@ -236,7 +236,7 @@ function inferSemanticColorNames(colors) {
 
     // Error: vermelho (hue ~0 ou ~360)
     const errorCandidate = analyzedColors.find(c =>
-        (c.hsl.h >= 0 && c.hsl.h <= 20) || (c.hsl.h >= 340 && c.hsl.h <= 360) &&
+        ((c.hsl.h >= 0 && c.hsl.h <= 20) || (c.hsl.h >= 340 && c.hsl.h <= 360)) &&
         c.hsl.s > 40
     );
     if (errorCandidate) {

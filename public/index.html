@@ -1,275 +1,182 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Design System Extractor | Extraia Design Systems de Qualquer Site</title>
-    <meta name="description"
-        content="Extraia automaticamente o design system de qualquer site. Cores, tipografia, espaçamentos e mais.">
+    <title>Vortexe | Arquitetura de Design</title>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Outfit:wght@100;400;700;900&family=Plus+Jakarta+Sans:wght@200;400;500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Spline Viewer -->
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.61/build/spline-viewer.js"></script>
+
+    <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/png" href="assets/img/robo.png">
 </head>
-
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loader">
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="text"><span>Loading</span></div>
-            <div class="line"></div>
+
+    <div class="noise"></div>
+    <div class="glow-layer"><div class="ambient-glow"></div></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+    <div class="blinds-container" id="blinds"></div>
+
+    <nav>
+        <div class="logo">Vortexe</div>
+        <div class="nav-links">
+            <a href="#">Soluções</a>
+            <a href="#">Tecnologia</a>
+            <a href="#">Método</a>
         </div>
-    </div>
+        <a href="#" class="btn-contact">Get Started</a>
+    </nav>
 
-    <!-- Main App Container -->
-    <div class="app-container">
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Title Section -->
-            <div class="title-section">
-                <div class="title-wrapper">
-                    <h1 class="main-title">Design System <span class="title-orange">Extractor</span></h1>
-                </div>
-                <p class="main-description">
-                    Extraia automaticamente o design system de qualquer site. Insira a URL e receba um JSON completo com
-                    cores, tipografia, espaçamentos e mais.
-                </p>
-            </div>
-
-            <!-- Spline Container -->
-            <div class="spline-container" id="splineContainer">
-                <script type="module"
-                    src="https://unpkg.com/@splinetool/viewer@1.12.48/build/spline-viewer.js"></script>
-                <spline-viewer url="https://prod.spline.design/BOllgzVWqzRKlcNe/scene.splinecode"></spline-viewer>
-            </div>
-
-            <!-- Form Section -->
-            <div class="form-section">
-                <form id="extractForm" class="extract-form">
-                    <div class="form-group">
-                        <label for="urlInput" class="form-label">URL do Site</label>
-                        <div class="input-wrapper">
-                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <g data-name="Layer 2">
-                                    <g data-name="inbox">
-                                        <rect width="24" height="24" transform="rotate(180 12 12)" opacity="0"></rect>
-                                        <path
-                                            d="M20.79 11.34l-3.34-6.68A3 3 0 0 0 14.76 3H9.24a3 3 0 0 0-2.69 1.66l-3.34 6.68a2 2 0 0 0-.21.9V18a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-5.76a2 2 0 0 0-.21-.9zM8.34 5.55a1 1 0 0 1 .9-.55h5.52a1 1 0 0 1 .9.55L18.38 11H16a1 1 0 0 0-1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2a1 1 0 0 0-1-1H5.62z">
-                                        </path>
-                                    </g>
-                                </g>
-                            </svg>
-                            <input type="url" id="urlInput" name="url" class="input" placeholder="https://exemplo.com"
-                                required autocomplete="off" />
-                            <button type="submit" id="extractBtn" class="Subscribe-btn">
-                                Extrair
-                                <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5"
-                                        stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
-                        <span class="form-hint">Cole a URL completa do site que você deseja analisar</span>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Progress -->
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-text" id="progressText">Extraindo tokens...</div>
-            </div>
-
-            <!-- Error Message -->
-            <div class="error-message" id="errorMessage">
-                <div class="error-icon">
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                        <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content reveal active">
+                <h1 class="font-title">A nova era<br>da Web</h1>
+                <p>Deconstruímos interfaces complexas em DNA matemático. Extração de tokens, cores e tipografia com fidelidade absoluta e inteligência sintética.</p>
+                <button class="btn-hero" id="hero-cta">
+                    <span class="btn-text">Iniciar Extração</span>
+                    <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4.16669 10H15.8334" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+                        <path d="M10.8334 5L15.8334 10L10.8334 15" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
                     </svg>
-                </div>
-                <div class="error-content">
-                    <h4>Falha na Extração</h4>
-                    <p id="errorText"></p>
-                </div>
-                <button class="btn-retry" id="retryBtn">Tentar Novamente</button>
+                </button>
             </div>
-        </main>
-    </div>
-
-    <div class="extraction-wrapper">
-        <div class="left-panel">
-            <img src="assets/img/robo.png" alt="Robot" class="robot-image" />
+            <div class="hero-visual reveal active delay-3">
+                <spline-viewer id="vortex-spline" url="https://prod.spline.design/17bkpdjCWwIAmqEC/scene.splinecode"></spline-viewer>
+            </div>
         </div>
-        <div class="right-panel">
-            <section class="results-section" id="resultsSection">
-                <!-- Stats Cards -->
-                <div class="stats-grid" id="statsGrid">
-                    <div class="stat-card">
-                        <div class="stat-icon colors-icon">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                                <circle cx="12" cy="12" r="4" fill="currentColor" />
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="colorCount">0</span>
-                            <span class="stat-label">Cores</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon typography-icon">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M4 7V4h16v3M9 20h6M12 4v16" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="fontCount">0</span>
-                            <span class="stat-label">Estilos de Fonte</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon spacing-icon">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor"
-                                    stroke-width="2" />
-                                <path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="currentColor" stroke-width="1"
-                                    opacity="0.5" />
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="spacingCount">0</span>
-                            <span class="stat-label">Espaçamentos</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon motion-icon">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="animationCount">0</span>
-                            <span class="stat-label">Animações</span>
-                        </div>
-                    </div>
-                </div>
+    </section>
 
-                <!-- Color Preview -->
-                <div class="preview-section" id="colorPreview">
-                    <h3>Paleta de Cores</h3>
-                    <div class="color-grid" id="colorGrid"></div>
-                </div>
-
-                <!-- Tabs -->
-                <div class="output-section">
-                    <div class="tabs-header">
-                        <button class="tab-btn active" data-tab="json">JSON</button>
-                        <button class="tab-btn" data-tab="css">CSS Variables</button>
-                        <button class="tab-btn" data-tab="tailwind">Tailwind Config</button>
-                    </div>
-
-                    <div class="tabs-content">
-                        <div class="tab-panel active" id="tab-json">
-                            <div class="code-header">
-                                <span class="code-lang">JSON</span>
-                                <button class="btn-copy" data-copy="json">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
-                                            stroke-width="2" />
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                                            stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                    <span>Copiar</span>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code id="jsonOutput"></code></pre>
-                        </div>
-
-                        <div class="tab-panel" id="tab-css">
-                            <div class="code-header">
-                                <span class="code-lang">CSS</span>
-                                <button class="btn-copy" data-copy="css">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
-                                            stroke-width="2" />
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                                            stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                    <span>Copiar</span>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code id="cssOutput"></code></pre>
-                        </div>
-
-                        <div class="tab-panel" id="tab-tailwind">
-                            <div class="code-header">
-                                <span class="code-lang">JavaScript</span>
-                                <button class="btn-copy" data-copy="tailwind">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor"
-                                            stroke-width="2" />
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                                            stroke="currentColor" stroke-width="2" />
-                                    </svg>
-                                    <span>Copiar</span>
-                                </button>
-                            </div>
-                            <pre class="code-block"><code id="tailwindOutput"></code></pre>
-                        </div>
-                    </div>
-
-                    <!-- Download Buttons -->
-                    <div class="download-actions">
-                        <button class="btn-download" data-format="json">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            Download JSON
-                        </button>
-                        <button class="btn-download" data-format="css">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            Download CSS
-                        </button>
-                        <button class="btn-download" data-format="tailwind">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            Download Tailwind
-                        </button>
-                    </div>
-                </div>
-            </section>
+    <!-- Arquitetura Section (Restored as per image_193138.png) -->
+    <section class="arquitetura">
+        <h2 class="arquitetura-title reveal">Arquitetura</h2>
+        
+        <div class="grid-arquitetura">
+            <div class="arq-item reveal delay-1">
+                <span class="arq-tag">{ 01_INGESTÃO }</span>
+                <h3>Scanner DOM</h3>
+                <p>Mapeamento profundo de propriedades visuais e hierarquia de marca de qualquer aplicação web.</p>
+            </div>
+            <div class="arq-item reveal delay-2">
+                <span class="arq-tag">{ 02_ANÁLISE }</span>
+                <h3>Neural Engine</h3>
+                <p>Processamento de inteligência para isolar padrões de design escaláveis de ruídos de código.</p>
+            </div>
+            <div class="arq-item reveal delay-3">
+                <span class="arq-tag">{ 03_SÍNTESE }</span>
+                <h3>Tokens W3C</h3>
+                <p>Geração instantânea de tokens e documentação técnica pronta para produção em React ou Figma.</p>
+            </div>
         </div>
-    </div>
+    </section>
 
+    <!-- Extraction Section -->
+    <section class="extraction">
+        <div class="extraction-container reveal">
+            <div class="extraction-viz">
+                <div class="extraction-viz-header">
+                    <div class="font-mono extraction-viz-status">SYSTEM_STATUS: IDLE</div>
+                    <i data-lucide="refresh-cw" id="loader-icon" size="18" class="extraction-viz-icon"></i>
+                </div>
+                <div class="extraction-viz-bars">
+                    <div class="bar bar-1"></div>
+                    <div class="bar bar-2"></div>
+                    <div class="bar bar-3"></div>
+                    <div class="bar bar-4"></div>
+                    <div class="bar bar-5"></div>
+                </div>
+                <div class="font-mono extraction-viz-footer">[CHANNELS: 104.22] [LATENCY: 12ms]<br>READY_FOR_EXTRACTION_SEQUENCE...</div>
+            </div>
+            <div class="extraction-input">
+                <span class="font-mono extraction-label">ENGINE_MODAL_V2.5</span>
+                <h4 class="font-title extraction-title">Extraia o DNA de <br><span class="font-serif extraction-title-accent">qualquer interface.</span></h4>
+                <div class="input-group"><input type="text" id="url-input" placeholder="Insira a URL de referência"></div>
+                <button class="btn-hero btn-process" id="process-btn">
+                    <span class="btn-text">Executar Motor de Análise</span>
+                    <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4.16669 10H15.8334" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+                        <path d="M10.8334 5L15.8334 10L10.8334 15" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+                    </svg>
+                </button>
+                <div id="ai-result"></div>
+            </div>
+        </div>
+    </section>
 
+    <!-- Tokens Dashboard -->
+    <section class="tokens-dashboard" id="tokens-section">
+
+        <!-- Cores Semânticas -->
+        <div class="dashboard-header">
+            <h2>Cores Semânticas</h2>
+            <p>Cores inferidas automaticamente a partir da interface analisada.</p>
+        </div>
+        <div class="token-grid" id="semantic-colors"></div>
+
+        <!-- Paleta de Cores -->
+        <div class="dashboard-header">
+            <h2>Paleta de Cores</h2>
+            <p>Cores sólidas mais utilizadas na interface, ordenadas por frequência.</p>
+        </div>
+        <div class="token-grid" id="solid-colors"></div>
+
+        <!-- Tipografia -->
+        <div class="dashboard-header">
+            <h2>Tipografia</h2>
+            <p>Famílias, tamanhos e pesos tipográficos extraídos.</p>
+        </div>
+        <div class="token-list" id="typography-tokens"></div>
+
+        <!-- Espaçamento -->
+        <div class="dashboard-header">
+            <h2>Espaçamento</h2>
+            <p>Escala de espaçamentos detectada na interface.</p>
+        </div>
+        <div class="token-scale" id="spacing-tokens"></div>
+
+        <!-- Border Radius -->
+        <div class="dashboard-header">
+            <h2>Border Radius</h2>
+            <p>Escala de arredondamentos detectada.</p>
+        </div>
+        <div class="token-scale" id="radius-tokens"></div>
+
+        <!-- Formatos de Saída -->
+        <div class="dashboard-header">
+            <h2>Exportar Tokens</h2>
+            <p>Tokens prontos para uso em CSS Custom Properties ou Tailwind.</p>
+        </div>
+        <div class="output-tabs">
+            <button class="tab-btn active" data-tab="css-output">CSS Custom Properties</button>
+            <button class="tab-btn" data-tab="tailwind-output">Tailwind Config</button>
+        </div>
+        <pre class="code-output active" id="css-output"><code></code></pre>
+        <pre class="code-output" id="tailwind-output"><code></code></pre>
+
+    </section>
+
+    <footer>
+        <span class="footer-tagline">SUA MELHOR FERRAMENTA.</span>
+        <h2 class="footer-title">Conheça o desenvolvedor.</h2>
+        <p class="footer-subtitle">Software Engineering | @enzoxavierrr</p>
+        <div class="footer-socials">
+            <a href="https://www.linkedin.com/in/enzoxavierrr/" class="social-circle interactive"><i data-lucide="linkedin" size="20"></i></a>
+            <a href="https://github.com/enzoxavierrr" class="social-circle interactive"><i data-lucide="github" size="20"></i></a>
+        </div>
+        <a href="https://enzoxavierrr.com.br" class="btn-view interactive">view <i data-lucide="arrow-up-right" size="14"></i></a>
+        <p class="footer-copy">© 2026</p>
+    </footer>
 
     <script src="js/app.js"></script>
 </body>
-
 </html>
