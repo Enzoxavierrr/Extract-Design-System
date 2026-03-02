@@ -5,6 +5,45 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ----------------------------------------
+    // 0. Preloader Counter Animation
+    // ----------------------------------------
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+        const d1 = document.getElementById('preloader-d1');
+        const d2 = document.getElementById('preloader-d2');
+        const d3 = document.getElementById('preloader-d3');
+        const hundreds = document.getElementById('preloader-hundreds');
+
+        // Starts showing only 2 digits (tens + units): "00"
+
+        // Phase 1 (0.3s): Units roll 0→9→0
+        setTimeout(() => {
+            if (d3) d3.style.transform = 'translateY(-10em)';
+        }, 300);
+
+        // Phase 2 (1.2s): Tens roll 0→9→0
+        setTimeout(() => {
+            if (d2) d2.style.transform = 'translateY(-10em)';
+        }, 1200);
+
+        // Phase 3 (3.8s): Hundreds digit slides in, showing "1"
+        setTimeout(() => {
+            if (hundreds) hundreds.classList.add('visible');
+            if (d1) d1.style.transform = 'translateY(-1em)';
+        }, 3800);
+
+        // Phase 4 (5.5s): Fade out preloader
+        setTimeout(() => {
+            preloader.classList.add('done');
+        }, 5500);
+
+        // Cleanup DOM
+        setTimeout(() => {
+            preloader.remove();
+        }, 6200);
+    }
+
+    // ----------------------------------------
     // 1. Initialize Lucide Icons (once)
     // ----------------------------------------
     lucide.createIcons();

@@ -2,6 +2,118 @@
    Vortexe | Design System Agent
    ======================================== */
 
+/* --- PRELOADER --- */
+.preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #020617;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.preloader.done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.preloader-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Counter */
+.preloader-counter {
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(6rem, 15vw, 12rem);
+    font-weight: 200;
+    line-height: 1;
+    color: #ffffff;
+    letter-spacing: -0.04em;
+}
+
+.preloader-digit-wrap {
+    height: 1em;
+    overflow: hidden;
+    position: relative;
+}
+
+.preloader-digit-col {
+    display: flex;
+    flex-direction: column;
+    transition: transform 2.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preloader-digit-col span {
+    height: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0.6em;
+}
+
+.preloader-hundreds {
+    width: 0;
+    opacity: 0;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
+}
+
+.preloader-hundreds.visible {
+    width: 0.6em;
+    opacity: 1;
+}
+
+.preloader-percent {
+    font-size: 0.35em;
+    opacity: 0.4;
+    margin-left: 4px;
+    align-self: flex-end;
+    margin-bottom: 0.2em;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0;
+}
+
+/* Brand info */
+.preloader-brand {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px;
+}
+
+.preloader-logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.preloader-copy {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.2);
+}
+
 /* --- VARIABLES --- */
 :root {
     --base-dark: #020617;
