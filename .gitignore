@@ -13,6 +13,9 @@ yarn-error.log*
 *.tmp
 *.temp
 
+# Variáveis de ambiente
+.env
+
 # Sistema operacional
 .DS_Store
 Thumbs.db

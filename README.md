@@ -465,8 +465,8 @@ npm run extract -- \
 ## 🛠️ Dependências
 
 - **playwright**: Navegação e automação do navegador
-- **postcss**: Processamento CSS
-- **postcss-safe-parser**: Parser seguro de CSS
+- **express**: Servidor web e API REST
+- **dotenv**: Variáveis de ambiente (.env)
 
 ## ⚠️ Limitações
 
