@@ -368,7 +368,7 @@ async function startExtraction() {
     const btn = document.getElementById('process-btn');
     const btnText = btn?.querySelector('.btn-text');
     const icon = document.getElementById('loader-icon');
-    const tokensSection = document.getElementById('tokens-section');
+    const tokensSection = document.getElementById('metodo');
     const resultArea = document.getElementById('ai-result');
 
     // Validate input
@@ -399,6 +399,7 @@ async function startExtraction() {
         });
         const extractData = await extractRes.json();
 
+        if (extractRes.status === 429) throw new Error(extractData.error || 'Limite de requisições atingido. Aguarde e tente novamente.');
         if (!extractData.success) throw new Error(extractData.error);
 
         // Populate dashboard with real tokens
